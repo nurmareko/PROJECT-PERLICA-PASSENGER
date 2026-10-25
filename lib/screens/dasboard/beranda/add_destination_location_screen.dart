@@ -159,25 +159,47 @@ class _AddDestinationState extends State<AddDestination> {
     if (destination == null) return [];
 
     List<LatLng> polylineCoordinates = [];
-    PolylinePoints polylinePoints = PolylinePoints(apiKey: GOOGLE_MAPS_API_KEY);
-
     try {
-      // Membuat request untuk mendapatkan polyline
-      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        request: PolylineRequest(
-          // Named argument untuk request
-          origin: PointLatLng(start.latitude, start.longitude),
-          destination: PointLatLng(destination.latitude, destination.longitude),
-          mode: TravelMode.driving,
-        ),
+      final response = await http.post(
+        Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+          'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
+        },
+        body: json.encode({
+          'origin': {
+            'location': {
+              'latLng': {
+                'latitude': start.latitude,
+                'longitude': start.longitude,
+              },
+            },
+          },
+          'destination': {
+            'location': {
+              'latLng': {
+                'latitude': destination.latitude,
+                'longitude': destination.longitude,
+              },
+            },
+          },
+          'travelMode': 'DRIVE',
+          'polylineEncoding': 'ENCODED_POLYLINE',
+        }),
       );
 
-      if (result.points.isNotEmpty) {
-        for (var point in result.points) {
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final routes = data['routes'];
+        if (routes == null || routes.isEmpty) return [];
+        final encodedPolyline = routes[0]['polyline']?['encodedPolyline'];
+        if (encodedPolyline == null || encodedPolyline.isEmpty) return [];
+        for (var point in PolylinePoints.decodePolyline(encodedPolyline)) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
       } else {
-        print("Error: ${result.errorMessage}");
+        print('Failed to fetch polyline: HTTP ${response.statusCode}');
       }
     } catch (e) {
       print("Failed to fetch polyline: $e");
