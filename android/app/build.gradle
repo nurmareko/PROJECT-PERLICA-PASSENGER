@@ -48,8 +48,8 @@ android {
 
     defaultConfig {
         applicationId "id.gofly.taxiuser"
-        assert dartDefines['ANDROID_GOOGLE_MAPS_API_KEY'], 'ANDROID_GOOGLE_MAPS_API_KEY is required'
-                manifestPlaceholders['googleMapsApiKey'] = dartDefines['ANDROID_GOOGLE_MAPS_API_KEY']
+        assert dartDefines['GOOGLE_MAPS_API_KEY'], 'GOOGLE_MAPS_API_KEY is required'
+        manifestPlaceholders['googleMapsApiKey'] = dartDefines['GOOGLE_MAPS_API_KEY']
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
