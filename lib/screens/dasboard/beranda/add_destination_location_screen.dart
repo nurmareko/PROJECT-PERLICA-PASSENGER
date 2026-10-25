@@ -305,30 +305,53 @@ class _AddDestinationState extends State<AddDestination> {
   }
 
   Future<Map<String, dynamic>> getDirection() async {
-    String apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+    const apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
 
     print("hallo ini calling direction api");
-    Uri url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/directions/json?origin=${_currentP!.latitude},${_currentP!.longitude}&destination=${_selectedP!.latitude},${_selectedP!.longitude}&mode=driving&key=$apiKey',
+    final response = await http.post(
+      Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration',
+      },
+      body: json.encode({
+        'origin': {
+          'location': {
+            'latLng': {
+              'latitude': _currentP!.latitude,
+              'longitude': _currentP!.longitude,
+            },
+          },
+        },
+        'destination': {
+          'location': {
+            'latLng': {
+              'latitude': _selectedP!.latitude,
+              'longitude': _selectedP!.longitude,
+            },
+          },
+        },
+        'travelMode': 'DRIVE',
+      }),
     );
-
-    final response = await http.get(url);
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = json.decode(response.body);
-      if (data["status"] == "OK") {
-        int distance = data["routes"][0]["legs"][0]["distance"]["value"];
-        int duration = data["routes"][0]["legs"][0]["duration"]["value"];
-        int minutes = (duration / 60).round();
-        double kilometers = (distance / 1000);
-        String formattedKilometers = kilometers.toStringAsFixed(1);
-
-        return {'distance': formattedKilometers, 'duration': minutes};
-      } else {
-        throw Exception('Failed to get directions. Status: ${data["status"]}');
+      final routes = data['routes'];
+      if (routes == null || routes.isEmpty) {
+        throw Exception('Failed to get directions: no route found');
       }
+      int distance = routes[0]['distanceMeters'];
+      String duration = routes[0]['duration'];
+      double seconds = double.parse(duration.substring(0, duration.length - 1));
+      int minutes = (seconds / 60).round();
+      double kilometers = distance / 1000;
+      String formattedKilometers = kilometers.toStringAsFixed(1);
+
+      return {'distance': formattedKilometers, 'duration': minutes};
     } else {
-      throw Exception('Failed to get directions');
+      throw Exception('Failed to get directions: HTTP ${response.statusCode}');
     }
   }
 
