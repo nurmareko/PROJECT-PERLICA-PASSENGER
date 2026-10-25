@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
+
 import 'package:airport_taxi_sharing_user_client/blocs/order/cancelOrder/cancel_order_bloc.dart';
 import 'package:airport_taxi_sharing_user_client/blocs/order/getCurrentOrder/get_current_order_bloc.dart';
 import 'package:airport_taxi_sharing_user_client/blocs/order/sendMessage/send_message_bloc.dart';
@@ -69,7 +70,9 @@ class _OrderState extends State<Order> {
         _loadData();
       } else if (message.notification?.title == "Pesan dari Driver") {
         _showReceivedMessageModal(
-            context, message.notification?.body ?? 'Pesan tidak ditemukan');
+          context,
+          message.notification?.body ?? 'Pesan tidak ditemukan',
+        );
       } else if (message.notification?.title == "Perjalanan selesai") {
         if (message.data.isNotEmpty) {
           String? orderId = message.data['orderId'];
@@ -82,31 +85,37 @@ class _OrderState extends State<Order> {
   }
 
   Future<Set<Polyline>> _getPolylineStatus(
-      LatLng customerOrderLocation, LatLng airportLocation) async {
+    LatLng customerOrderLocation,
+    LatLng airportLocation,
+  ) async {
     Set<Polyline> polylines = {};
 
+    String apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
     String url =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${customerOrderLocation.latitude},${customerOrderLocation.longitude}&destination=${airportLocation.latitude},${airportLocation.longitude}&key=AIzaSyBo8MhxZIYfbX9exFOGhOuz-PnoVRwgvLY";
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${customerOrderLocation.latitude},${customerOrderLocation.longitude}&destination=${airportLocation.latitude},${airportLocation.longitude}&key=$apiKey";
 
     // Fetch the directions from current location to the airport
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final List<LatLng> points = _convertToLatLng(
-          _decodePoly(data['routes'][0]['overview_polyline']['points']));
-      polylines.add(Polyline(
-        polylineId: const PolylineId('polylineToAirport'),
-        visible: true,
-        points: points,
-        color: Colors.blue,
-        width: 4,
-      ));
+        _decodePoly(data['routes'][0]['overview_polyline']['points']),
+      );
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('polylineToAirport'),
+          visible: true,
+          points: points,
+          color: Colors.blue,
+          width: 4,
+        ),
+      );
     }
 
     return polylines;
   }
 
-// Decode Polyline points
+  // Decode Polyline points
   List<LatLng> _convertToLatLng(List<dynamic> points) {
     List<LatLng> result = <LatLng>[];
     for (int i = 0; i < points.length; i++) {
@@ -177,9 +186,7 @@ class _OrderState extends State<Order> {
                   const SizedBox(height: 20),
                   Text(
                     'Perjalanan Selesai #$orderId',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium!
+                    style: Theme.of(context).textTheme.titleMedium!
                         .copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
@@ -187,7 +194,9 @@ class _OrderState extends State<Order> {
                     'Berikut harga perjalanan yang harus Anda bayar secara tunai sesuai perhitungan aplikasi. Berikan rating dan ulasan Anda kepada driver jika berkenan :)',
                     textAlign: TextAlign.left,
                     style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        fontWeight: FontWeight.w300, color: Colors.grey),
+                      fontWeight: FontWeight.w300,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 15),
                   RatingBar.builder(
@@ -197,10 +206,8 @@ class _OrderState extends State<Order> {
                     allowHalfRating: true,
                     itemCount: 5,
                     itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    itemBuilder: (context, _) => const Icon(
-                      Icons.star,
-                      color: Colors.amber,
-                    ),
+                    itemBuilder: (context, _) =>
+                        const Icon(Icons.star, color: Colors.amber),
                     onRatingUpdate: (rating) {
                       _rating = rating;
                     },
@@ -218,9 +225,7 @@ class _OrderState extends State<Order> {
                   const SizedBox(height: 20),
                   Text(
                     'Estimasi Harga: $estimatedCost,00',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium!
+                    style: Theme.of(context).textTheme.titleMedium!
                         .copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 20),
@@ -232,8 +237,8 @@ class _OrderState extends State<Order> {
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).scaffoldBackgroundColor,
+                            backgroundColor: Theme.of(context)
+                                .scaffoldBackgroundColor,
                             padding: const EdgeInsets.all(16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -254,8 +259,9 @@ class _OrderState extends State<Order> {
                         listener: (context, state) {
                           if (state is SendReviewFailure) {
                             if (state.errorMessage == "Unauthorized") {
-                              SchedulerBinding.instance
-                                  .addPostFrameCallback((_) {
+                              SchedulerBinding.instance.addPostFrameCallback((
+                                _,
+                              ) {
                                 Get.toNamed('/onBoarding');
                               });
                             }
@@ -293,19 +299,25 @@ class _OrderState extends State<Order> {
                               } else {
                                 final sendReviewRequestModel =
                                     SendReviewRequestModel(
-                                        orderId: orderId,
-                                        rating: _rating,
-                                        review: _review);
+                                      orderId: orderId,
+                                      rating: _rating,
+                                      review: _review,
+                                    );
 
                                 context.read<SendReviewBloc>().add(
-                                      LoadSendReviewEvent(
-                                          request: sendReviewRequestModel),
-                                    );
+                                  LoadSendReviewEvent(
+                                    request: sendReviewRequestModel,
+                                  ),
+                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 33, 156, 144),
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                33,
+                                156,
+                                144,
+                              ),
                               padding: const EdgeInsets.all(16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -401,11 +413,7 @@ class _OrderState extends State<Order> {
           backgroundColor: const Color(0xFF1E282C),
           content: Row(
             children: [
-              Lottie.asset(
-                'lottie/splash_screen.json',
-                width: 50,
-                height: 50,
-              ),
+              Lottie.asset('lottie/splash_screen.json', width: 50, height: 50),
               const SizedBox(width: 20),
               const Expanded(
                 child: Text(
@@ -425,20 +433,23 @@ class _OrderState extends State<Order> {
   }
 
   Future<void> addCustomCustomerIcon() async {
-    final ByteData imageData =
-        await rootBundle.load("images/location-mark.png");
+    final ByteData imageData = await rootBundle.load(
+      "images/location-mark.png",
+    );
     final ui.Codec codec = await ui.instantiateImageCodec(
       imageData.buffer.asUint8List(),
       targetWidth: 80,
       targetHeight: 80,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ByteData? byteData =
-        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     final Uint8List resizedImageData = byteData!.buffer.asUint8List();
 
-    final BitmapDescriptor bitmapDescriptor =
-        BitmapDescriptor.fromBytes(resizedImageData);
+    final BitmapDescriptor bitmapDescriptor = BitmapDescriptor.fromBytes(
+      resizedImageData,
+    );
     setState(() {
       markerIconCustomer = bitmapDescriptor;
     });
@@ -452,12 +463,14 @@ class _OrderState extends State<Order> {
       targetHeight: 80,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ByteData? byteData =
-        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     final Uint8List resizedImageData = byteData!.buffer.asUint8List();
 
-    final BitmapDescriptor bitmapDescriptor =
-        BitmapDescriptor.fromBytes(resizedImageData);
+    final BitmapDescriptor bitmapDescriptor = BitmapDescriptor.fromBytes(
+      resizedImageData,
+    );
     setState(() {
       markerIconRideTaxi = bitmapDescriptor;
     });
@@ -471,12 +484,14 @@ class _OrderState extends State<Order> {
       targetHeight: 100,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ByteData? byteData =
-        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     final Uint8List resizedImageData = byteData!.buffer.asUint8List();
 
-    final BitmapDescriptor bitmapDescriptor =
-        BitmapDescriptor.fromBytes(resizedImageData);
+    final BitmapDescriptor bitmapDescriptor = BitmapDescriptor.fromBytes(
+      resizedImageData,
+    );
     setState(() {
       markerIconAirport = bitmapDescriptor;
     });
@@ -490,12 +505,14 @@ class _OrderState extends State<Order> {
       targetHeight: 120,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ByteData? byteData =
-        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     final Uint8List resizedImageData = byteData!.buffer.asUint8List();
 
-    final BitmapDescriptor bitmapDescriptor =
-        BitmapDescriptor.fromBytes(resizedImageData);
+    final BitmapDescriptor bitmapDescriptor = BitmapDescriptor.fromBytes(
+      resizedImageData,
+    );
     setState(() {
       markerIconTaxi = bitmapDescriptor;
     });
@@ -529,7 +546,9 @@ class _OrderState extends State<Order> {
   }
 
   Widget _buildGetCurrentOrderContent(
-      BuildContext context, GetCurrentOrderState state) {
+    BuildContext context,
+    GetCurrentOrderState state,
+  ) {
     if (state is GetCurrentOrderLoading) {
       return const LoadingModalDataBackground();
     } else if (state is GetCurrentOrderLoaded) {
@@ -543,17 +562,17 @@ class _OrderState extends State<Order> {
       } else if (state.errorMessage == "no_current_order") {
         return const NoCurrentOrder();
       }
-      return SomethingError(onNavigate: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const DasboardTemplate(initialPageIndex: 2),
-          ),
-        );
-      });
-    } else {
-      return const Center(
-        child: Text('Memuat Data...'),
+      return SomethingError(
+        onNavigate: () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const DasboardTemplate(initialPageIndex: 2),
+            ),
+          );
+        },
       );
+    } else {
+      return const Center(child: Text('Memuat Data...'));
     }
   }
 
@@ -594,25 +613,19 @@ class _OrderState extends State<Order> {
       Marker(
         markerId: const MarkerId('orderLocation'),
         position: LatLng(customerOrderLat, customerOrderLong),
-        infoWindow: const InfoWindow(
-          title: 'Lokasi Penjemputan',
-        ),
-        icon: markerIconCustomer
+        infoWindow: const InfoWindow(title: 'Lokasi Penjemputan'),
+        icon: markerIconCustomer,
       ),
       Marker(
         markerId: const MarkerId('rideLocation'),
         position: LatLng(rideLat, rideLong),
-        infoWindow: const InfoWindow(
-          title: 'Lokasi Pengantaran',
-        ),
+        infoWindow: const InfoWindow(title: 'Lokasi Pengantaran'),
         icon: markerIconRideTaxi,
       ),
       Marker(
         markerId: const MarkerId('supadioAirportLocation'),
         position: const LatLng(-0.100105, 109.376221),
-        infoWindow: const InfoWindow(
-          title: 'Lokasi Bandar Udara Supadio',
-        ),
+        infoWindow: const InfoWindow(title: 'Lokasi Bandar Udara Supadio'),
         icon: markerIconAirport,
       ),
     };
@@ -622,9 +635,7 @@ class _OrderState extends State<Order> {
         Marker(
           markerId: const MarkerId('driverLocation'),
           position: LatLng(driverLat, driverLong),
-          infoWindow: const InfoWindow(
-            title: 'Lokasi Driver',
-          ),
+          infoWindow: const InfoWindow(title: 'Lokasi Driver'),
           icon: markerIconTaxi,
         ),
       );
@@ -636,14 +647,16 @@ class _OrderState extends State<Order> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const LoadingModalDataBackground();
         } else if (snapshot.hasError) {
-          return SomethingError(onNavigate: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) =>
-                    const DasboardTemplate(initialPageIndex: 2),
-              ),
-            );
-          });
+          return SomethingError(
+            onNavigate: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const DasboardTemplate(initialPageIndex: 2),
+                ),
+              );
+            },
+          );
         } else {
           String locationName = snapshot.data ?? 'Terjadi kesalahan...';
           locationAddress = locationName;
@@ -652,138 +665,140 @@ class _OrderState extends State<Order> {
 
           return Column(
             children: [
-              Stack(children: [
-                SizedBox(
-                  height: 440,
-                  child: FutureBuilder<Set<Polyline>>(
-                    future: status == 1
-                        ? _getPolylineStatus(
-                            LatLng(driverLat, driverLong),
-                            LatLng(customerOrderLat, customerOrderLong),
-                          )
-                        : status == 2
-                            ? _getPolylineStatus(
-                                LatLng(driverLat, driverLong),
-                                LatLng(customerOrderLat, customerOrderLong),
-                              )
-                            : status == 3
-                                ? _getPolylineStatus(
-                                    LatLng(driverLat, driverLong),
-                                    const LatLng(-0.100105, 109.376221),
-                                  )
-                                : _getPolylineStatus(
-                                    LatLng(rideLat, rideLong),
-                                    LatLng(customerOrderLat, customerOrderLong),
-                                  ),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        // Show a loading indicator while waiting for the polylines
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      } else if (snapshot.hasError) {
-                        // Handle any errors that occur during the Future
-                        return const Center(
-                          child: Text('Error loading route data'),
-                        );
-                      } else if (snapshot.hasData) {
-                        // Display the map with polylines once data is loaded
-                        return GoogleMap(
-                          mapType: MapType.normal,
-                          myLocationEnabled: true,
-                          myLocationButtonEnabled: true,
-                          initialCameraPosition: initialCameraPosition,
-                          onMapCreated: (GoogleMapController controller) {},
-                          zoomGesturesEnabled: true,
-                          scrollGesturesEnabled: true,
-                          tiltGesturesEnabled: true,
-                          gestureRecognizers: <Factory<
-                              OneSequenceGestureRecognizer>>{
-                            Factory<OneSequenceGestureRecognizer>(
-                                () => EagerGestureRecognizer()),
-                          },
-                          rotateGesturesEnabled: true,
-                          markers: markers,
-                          circles: {
-                            Circle(
-                              circleId: const CircleId("pickupRadius"),
-                              center: LatLng(rideLat, rideLong),
-                              radius: pickupRadius.toDouble(),
-                              strokeColor: Colors.blue,
-                              strokeWidth: 1,
-                              fillColor: Colors.blue.withOpacity(0.1),
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 440,
+                    child: FutureBuilder<Set<Polyline>>(
+                      future: status == 1
+                          ? _getPolylineStatus(
+                              LatLng(driverLat, driverLong),
+                              LatLng(customerOrderLat, customerOrderLong),
+                            )
+                          : status == 2
+                          ? _getPolylineStatus(
+                              LatLng(driverLat, driverLong),
+                              LatLng(customerOrderLat, customerOrderLong),
+                            )
+                          : status == 3
+                          ? _getPolylineStatus(
+                              LatLng(driverLat, driverLong),
+                              const LatLng(-0.100105, 109.376221),
+                            )
+                          : _getPolylineStatus(
+                              LatLng(rideLat, rideLong),
+                              LatLng(customerOrderLat, customerOrderLong),
                             ),
-                          },
-                          polylines: snapshot.data!,
-                        );
-                      } else {
-                        // Show a fallback UI if there is no data (optional)
-                        return const Center(
-                          child: Text('No route data available'),
-                        );
-                      }
-                    },
-                  ),
-                ),
-                Center(
-                  child: FloatingWidget(
-                    verticalSpace: 20,
-                    duration: const Duration(
-                      seconds: 1,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          // Show a loading indicator while waiting for the polylines
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          // Handle any errors that occur during the Future
+                          return const Center(
+                            child: Text('Error loading route data'),
+                          );
+                        } else if (snapshot.hasData) {
+                          // Display the map with polylines once data is loaded
+                          return GoogleMap(
+                            mapType: MapType.normal,
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: true,
+                            initialCameraPosition: initialCameraPosition,
+                            onMapCreated: (GoogleMapController controller) {},
+                            zoomGesturesEnabled: true,
+                            scrollGesturesEnabled: true,
+                            tiltGesturesEnabled: true,
+                            gestureRecognizers:
+                                <Factory<OneSequenceGestureRecognizer>>{
+                                  Factory<OneSequenceGestureRecognizer>(
+                                    () => EagerGestureRecognizer(),
+                                  ),
+                                },
+                            rotateGesturesEnabled: true,
+                            markers: markers,
+                            circles: {
+                              Circle(
+                                circleId: const CircleId("pickupRadius"),
+                                center: LatLng(rideLat, rideLong),
+                                radius: pickupRadius.toDouble(),
+                                strokeColor: Colors.blue,
+                                strokeWidth: 1,
+                                fillColor: Colors.blue.withOpacity(0.1),
+                              ),
+                            },
+                            polylines: snapshot.data!,
+                          );
+                        } else {
+                          // Show a fallback UI if there is no data (optional)
+                          return const Center(
+                            child: Text('No route data available'),
+                          );
+                        }
+                      },
                     ),
-                    reverseDuration: const Duration(seconds: 1),
+                  ),
+                  Center(
+                    child: FloatingWidget(
+                      verticalSpace: 20,
+                      duration: const Duration(seconds: 1),
+                      reverseDuration: const Duration(seconds: 1),
+                      child: Container(
+                        width: 300,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xff27374D),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Lottie.asset(
+                              'lottie/splash_screen.json',
+                              width: 50,
+                              height: 50,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              _getStatusText(status),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                     child: Container(
-                      width: 300,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color(0xff27374D),
-                        borderRadius: BorderRadius.circular(10),
+                      padding: const EdgeInsets.all(5.0),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1E282C),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                        ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Lottie.asset(
-                            'lottie/splash_screen.json',
-                            width: 50,
-                            height: 50,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            _getStatusText(status),
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.white),
-                          ),
-                        ],
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [],
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(5.0),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1E282C),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                      ),
-                    ),
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [],
-                    ),
-                  ),
-                ),
-              ]),
+                ],
+              ),
               Container(
                 padding: const EdgeInsets.all(10.0),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF1E282C),
-                ),
+                decoration: const BoxDecoration(color: Color(0xFF1E282C)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -808,8 +823,8 @@ class _OrderState extends State<Order> {
                                   if (state.errorMessage == "Unauthorized") {
                                     SchedulerBinding.instance
                                         .addPostFrameCallback((_) {
-                                      Get.toNamed('/onBoarding');
-                                    });
+                                          Get.toNamed('/onBoarding');
+                                        });
                                   }
                                   AnimatedSnackBar.removeAll();
                                   AnimatedSnackBar.material(
@@ -830,23 +845,30 @@ class _OrderState extends State<Order> {
                                 }
                               },
                               child: IconButton(
-                                icon: const Icon(Icons.message,
-                                    color: Colors.white),
+                                icon: const Icon(
+                                  Icons.message,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   _showMessageModal(context, id);
                                 },
                               ),
                             ),
                             PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert,
-                                  color: Colors.white),
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: Colors.white,
+                              ),
                               onSelected: (String value) {
                                 if (value == 'Detail Driver') {
                                   showModalBottomSheet(
                                     context: context,
                                     builder: (context) {
                                       return _buildDriverDetailSheet(
-                                          context, driver, status);
+                                        context,
+                                        driver,
+                                        status,
+                                      );
                                     },
                                   );
                                 } else if (value == 'Detail Pesanan') {
@@ -854,14 +876,17 @@ class _OrderState extends State<Order> {
                                     context: context,
                                     builder: (context) {
                                       return _buildOrderDetailSheet(
-                                          context, state.model);
+                                        context,
+                                        state.model,
+                                      );
                                     },
                                   );
                                 }
                               },
                               itemBuilder: (BuildContext context) {
-                                return {'Detail Driver', 'Detail Pesanan'}
-                                    .map((String choice) {
+                                return {'Detail Driver', 'Detail Pesanan'}.map((
+                                  String choice,
+                                ) {
                                   return PopupMenuItem<String>(
                                     value: choice,
                                     child: Text(choice),
@@ -948,8 +973,10 @@ class _OrderState extends State<Order> {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.timer,
-                                        color: Colors.white),
+                                    const Icon(
+                                      Icons.timer,
+                                      color: Colors.white,
+                                    ),
                                     const SizedBox(width: 8),
                                     Text(
                                       estimationDuration,
@@ -963,8 +990,10 @@ class _OrderState extends State<Order> {
                                 ),
                                 Row(
                                   children: [
-                                    const Icon(Icons.route,
-                                        color: Colors.white),
+                                    const Icon(
+                                      Icons.route,
+                                      color: Colors.white,
+                                    ),
                                     const SizedBox(width: 8),
                                     Text(
                                       estimationDistance,
@@ -1025,17 +1054,24 @@ class _OrderState extends State<Order> {
                               final cancelOrderRequestModel =
                                   CancelOrderRequestModel(orderId: id);
                               context.read<CancelOrderBloc>().add(
-                                    LoadCancelOrderEvent(
-                                        request: cancelOrderRequestModel),
-                                  );
+                                LoadCancelOrderEvent(
+                                  request: cancelOrderRequestModel,
+                                ),
+                              );
                             },
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const ui.Color.fromARGB(255, 185, 8, 8),
+                          backgroundColor: const ui.Color.fromARGB(
+                            255,
+                            185,
+                            8,
+                            8,
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              vertical: 10.0, horizontal: 10.0),
+                            vertical: 10.0,
+                            horizontal: 10.0,
+                          ),
                         ),
                         child: const Text(
                           'Batalkan Pesanan',
@@ -1154,20 +1190,23 @@ class _OrderState extends State<Order> {
   }
 
   void _sendMessage(String orderId, String message) {
-    final requestModelMessage =
-        SendMessageRequestModel(orderId: orderId, message: message);
+    final requestModelMessage = SendMessageRequestModel(
+      orderId: orderId,
+      message: message,
+    );
 
     context.read<SendMessageBloc>().add(
-          LoadSendMessageEvent(request: requestModelMessage),
-        );
+      LoadSendMessageEvent(request: requestModelMessage),
+    );
   }
 
   Widget _buildDriverDetailSheet(
-      BuildContext context, DriverInfo driver, int status) {
+    BuildContext context,
+    DriverInfo driver,
+    int status,
+  ) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E282C),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFF1E282C)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1203,19 +1242,22 @@ class _OrderState extends State<Order> {
                 const SizedBox(width: 10),
                 Text(
                   driver.averageRating.toStringAsFixed(
-                      1), // Menampilkan rating dengan 1 desimal
+                    1,
+                  ), // Menampilkan rating dengan 1 desimal
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(width: 5),
                 const Text(
                   '/ 5',
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -1226,10 +1268,7 @@ class _OrderState extends State<Order> {
                 const SizedBox(width: 10),
                 Text(
                   driver.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                   softWrap: true,
                 ),
               ],
@@ -1241,10 +1280,7 @@ class _OrderState extends State<Order> {
                 const SizedBox(width: 10),
                 Text(
                   driver.noMembership,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                   softWrap: true,
                 ),
               ],
@@ -1256,10 +1292,7 @@ class _OrderState extends State<Order> {
                 const SizedBox(width: 10),
                 Text(
                   driver.licensePlate,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                   softWrap: true,
                 ),
               ],
@@ -1271,10 +1304,7 @@ class _OrderState extends State<Order> {
                 const SizedBox(width: 10),
                 Text(
                   '(+62) ${driver.phoneNumber}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                   softWrap: true,
                 ),
               ],
@@ -1287,11 +1317,11 @@ class _OrderState extends State<Order> {
   }
 
   Widget _buildOrderDetailSheet(
-      BuildContext context, GetCurrentOrderResponseModel model) {
+    BuildContext context,
+    GetCurrentOrderResponseModel model,
+  ) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E282C),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFF1E282C)),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Column(
@@ -1301,9 +1331,10 @@ class _OrderState extends State<Order> {
             Text(
               'Detail Pesanan Taksi Bandara Supadio #${model.id}',
               style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 10),
             Row(
@@ -1311,8 +1342,11 @@ class _OrderState extends State<Order> {
                 const Icon(Icons.location_on, size: 24, color: Colors.white),
                 const SizedBox(width: 8),
                 Expanded(
-                    child: Text('Lokasi Penjemputan \n$locationAddress',
-                        style: const TextStyle(color: Colors.white))),
+                  child: Text(
+                    'Lokasi Penjemputan \n$locationAddress',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -1337,8 +1371,11 @@ class _OrderState extends State<Order> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.info_rounded,
-                          size: 24, color: Colors.white),
+                      const Icon(
+                        Icons.info_rounded,
+                        size: 24,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
@@ -1369,8 +1406,11 @@ class _OrderState extends State<Order> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.attach_money,
-                          size: 24, color: Colors.white),
+                      const Icon(
+                        Icons.attach_money,
+                        size: 24,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
@@ -1406,7 +1446,10 @@ class _OrderState extends State<Order> {
 
   Future<String> _getLocationName(double lat, double long) async {
     try {
-      List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(lat, long);
+      List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(
+        lat,
+        long,
+      );
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
         String name = place.name ?? '';

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
+
 import 'package:airport_taxi_sharing_user_client/consts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -77,32 +78,37 @@ class _AddDestinationState extends State<AddDestination> {
       targetHeight: 90,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ByteData? byteData =
-        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     final Uint8List resizedImageData = byteData!.buffer.asUint8List();
 
-    final BitmapDescriptor bitmapDescriptor =
-        BitmapDescriptor.fromBytes(resizedImageData);
+    final BitmapDescriptor bitmapDescriptor = BitmapDescriptor.fromBytes(
+      resizedImageData,
+    );
     setState(() {
       markerRideLocationIcon = bitmapDescriptor;
     });
   }
 
   Future<void> addCurrentLocationIcon() async {
-    final ByteData imageData =
-        await rootBundle.load("images/location-mark.png");
+    final ByteData imageData = await rootBundle.load(
+      "images/location-mark.png",
+    );
     final ui.Codec codec = await ui.instantiateImageCodec(
       imageData.buffer.asUint8List(),
       targetWidth: 80,
       targetHeight: 80,
     );
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    final ByteData? byteData =
-        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     final Uint8List resizedImageData = byteData!.buffer.asUint8List();
 
-    final BitmapDescriptor bitmapDescriptor =
-        BitmapDescriptor.fromBytes(resizedImageData);
+    final BitmapDescriptor bitmapDescriptor = BitmapDescriptor.fromBytes(
+      resizedImageData,
+    );
     setState(() {
       markerIcon = bitmapDescriptor;
     });
@@ -128,11 +134,14 @@ class _AddDestinationState extends State<AddDestination> {
       }
     }
 
-    _locationController.onLocationChanged
-        .listen((LocationData currentLocation) {
+    _locationController.onLocationChanged.listen((
+      LocationData currentLocation,
+    ) {
       setState(() {
-        _currentP =
-            LatLng(currentLocation.latitude!, currentLocation.longitude!);
+        _currentP = LatLng(
+          currentLocation.latitude!,
+          currentLocation.longitude!,
+        );
       });
     });
   }
@@ -143,7 +152,9 @@ class _AddDestinationState extends State<AddDestination> {
   }
 
   Future<List<LatLng>> getPolylinePoints(
-      LatLng start, LatLng? destination) async {
+    LatLng start,
+    LatLng? destination,
+  ) async {
     print("Calling polyline API...");
     if (destination == null) return [];
 
@@ -153,7 +164,6 @@ class _AddDestinationState extends State<AddDestination> {
     try {
       // Membuat request untuk mendapatkan polyline
       PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-
         request: PolylineRequest(
           // Named argument untuk request
           origin: PointLatLng(start.latitude, start.longitude),
@@ -200,7 +210,7 @@ class _AddDestinationState extends State<AddDestination> {
   }
 
   void getSuggestion(String input) async {
-    const String placesApiKey = "AIzaSyBo8MhxZIYfbX9exFOGhOuz-PnoVRwgvLY";
+    const String placesApiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
 
     print("hallo ini calling suggestion api");
     try {
@@ -254,8 +264,8 @@ class _AddDestinationState extends State<AddDestination> {
       print("hallo ini calling getPlaceDetail api");
       const String placesDetailsBaseUrl =
           'https://maps.googleapis.com/maps/api/place/details/json';
-      String request =
-          '$placesDetailsBaseUrl?place_id=$placeId&key=AIzaSyBo8MhxZIYfbX9exFOGhOuz-PnoVRwgvLY';
+      String apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+      String request = '$placesDetailsBaseUrl?place_id=$placeId&key=$apiKey';
       var response = await http.get(Uri.parse(request));
       var data = json.decode(response.body);
       if (response.statusCode == 200) {
@@ -273,11 +283,12 @@ class _AddDestinationState extends State<AddDestination> {
   }
 
   Future<Map<String, dynamic>> getDirection() async {
-    String apiKey = 'AIzaSyBo8MhxZIYfbX9exFOGhOuz-PnoVRwgvLY';
+    String apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
 
     print("hallo ini calling direction api");
     Uri url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${_currentP!.latitude},${_currentP!.longitude}&destination=${_selectedP!.latitude},${_selectedP!.longitude}&mode=driving&key=$apiKey');
+      'https://maps.googleapis.com/maps/api/directions/json?origin=${_currentP!.latitude},${_currentP!.longitude}&destination=${_selectedP!.latitude},${_selectedP!.longitude}&mode=driving&key=$apiKey',
+    );
 
     final response = await http.get(url);
 
@@ -290,10 +301,7 @@ class _AddDestinationState extends State<AddDestination> {
         double kilometers = (distance / 1000);
         String formattedKilometers = kilometers.toStringAsFixed(1);
 
-        return {
-          'distance': formattedKilometers,
-          'duration': minutes,
-        };
+        return {'distance': formattedKilometers, 'duration': minutes};
       } else {
         throw Exception('Failed to get directions. Status: ${data["status"]}');
       }
@@ -308,8 +316,9 @@ class _AddDestinationState extends State<AddDestination> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            backgroundColor:
-                const Color(0xFF121B22), // Warna latar belakang gelap
+            backgroundColor: const Color(
+              0xFF121B22,
+            ), // Warna latar belakang gelap
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -330,10 +339,7 @@ class _AddDestinationState extends State<AddDestination> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.white,
-                    ),
+                    Icon(Icons.info_outline, color: Colors.white),
                     SizedBox(width: 8),
                     Text(
                       'Berikan ini kepada driver untuk \ndipindai',
@@ -348,8 +354,9 @@ class _AddDestinationState extends State<AddDestination> {
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text(
                   'Close',
-                  style:
-                      TextStyle(color: Colors.white), // Warna teks tombol putih
+                  style: TextStyle(
+                    color: Colors.white,
+                  ), // Warna teks tombol putih
                 ),
               ),
             ],
@@ -393,10 +400,7 @@ class _AddDestinationState extends State<AddDestination> {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.info,
-                          color: Colors.white,
-                        ),
+                        Icon(Icons.info, color: Colors.white),
                         SizedBox(width: 8),
                         Text(
                           'Anda dapat menandai lokasi tujuan Anda,\nkemudian kode QR akan dihasilkan dan berikan \nkepada driver untuk dipindai.',
@@ -424,8 +428,10 @@ class _AddDestinationState extends State<AddDestination> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.location_on,
-                                      color: Colors.white),
+                                  const Icon(
+                                    Icons.location_on,
+                                    color: Colors.white,
+                                  ),
                                   const SizedBox(width: 10.0),
                                   Expanded(
                                     child: GestureDetector(
@@ -434,61 +440,67 @@ class _AddDestinationState extends State<AddDestination> {
                                           context: context,
                                           builder: (BuildContext context) {
                                             return Dialog(
-                                              backgroundColor:
-                                                  const Color(0xFF1E282C),
+                                              backgroundColor: const Color(
+                                                0xFF1E282C,
+                                              ),
                                               child: Container(
-                                                padding:
-                                                    const EdgeInsets.all(10.0),
+                                                padding: const EdgeInsets.all(
+                                                  10.0,
+                                                ),
                                                 child: Column(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
                                                     TextField(
                                                       controller: _controller,
-                                                      decoration:
-                                                          const InputDecoration(
+                                                      decoration: const InputDecoration(
                                                         hintText: "Cari lokasi",
                                                         hintStyle: TextStyle(
-                                                            color:
-                                                                Colors.white54),
+                                                          color: Colors.white54,
+                                                        ),
                                                         enabledBorder:
                                                             UnderlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                                  color: Colors
-                                                                      .white54),
-                                                        ),
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                    color: Colors
+                                                                        .white54,
+                                                                  ),
+                                                            ),
                                                         focusedBorder:
                                                             UnderlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                                  color: Colors
-                                                                      .white),
-                                                        ),
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
+                                                            ),
                                                       ),
                                                       style: const TextStyle(
-                                                          color: Colors.white),
+                                                        color: Colors.white,
+                                                      ),
                                                     ),
                                                     const SizedBox(
-                                                        height: 10.0),
+                                                      height: 10.0,
+                                                    ),
                                                     Expanded(
                                                       child: ListView.builder(
                                                         shrinkWrap: true,
                                                         itemCount:
                                                             _placeList.length,
-                                                        itemBuilder:
-                                                            (context, index) {
+                                                        itemBuilder: (context, index) {
                                                           return ListTile(
                                                             title: Text(
-                                                              _placeList[index][
-                                                                  "description"],
-                                                              style: const TextStyle(
-                                                                  color: Colors
-                                                                      .white),
+                                                              _placeList[index]["description"],
+                                                              style:
+                                                                  const TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
                                                             ),
                                                             onTap: () {
                                                               _onPlaceSelected(
-                                                                  index);
+                                                                index,
+                                                              );
                                                             },
                                                           );
                                                         },
@@ -514,8 +526,10 @@ class _AddDestinationState extends State<AddDestination> {
                                   ),
                                   if (_selectedAddress.isNotEmpty)
                                     IconButton(
-                                      icon: const Icon(Icons.clear,
-                                          color: Colors.grey),
+                                      icon: const Icon(
+                                        Icons.clear,
+                                        color: Colors.grey,
+                                      ),
                                       onPressed: () {
                                         setState(() {
                                           _selectedAddress = "";
@@ -536,9 +550,7 @@ class _AddDestinationState extends State<AddDestination> {
                         height: 300.0,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10.0),
-                          border: Border.all(
-                            color: const Color(0xFF1E282C),
-                          ),
+                          border: Border.all(color: const Color(0xFF1E282C)),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10.0),
@@ -548,8 +560,8 @@ class _AddDestinationState extends State<AddDestination> {
                                 GoogleMap(
                                   onMapCreated:
                                       (GoogleMapController controller) {
-                                    _mapController.complete(controller);
-                                  },
+                                        _mapController.complete(controller);
+                                      },
                                   initialCameraPosition: CameraPosition(
                                     target: _currentP!,
                                     zoom: 14.0,
@@ -559,78 +571,84 @@ class _AddDestinationState extends State<AddDestination> {
                                   myLocationButtonEnabled: true,
                                   scrollGesturesEnabled: true,
                                   zoomGesturesEnabled: true,
-                                  gestureRecognizers: <Factory<
-                                      OneSequenceGestureRecognizer>>{
-                                    Factory<OneSequenceGestureRecognizer>(
-                                      () => EagerGestureRecognizer(),
-                                    ),
-                                  },
+                                  gestureRecognizers:
+                                      <Factory<OneSequenceGestureRecognizer>>{
+                                        Factory<OneSequenceGestureRecognizer>(
+                                          () => EagerGestureRecognizer(),
+                                        ),
+                                      },
                                   rotateGesturesEnabled: true,
-                                  markers: Set<Marker>.of(_currentP != null
-                                      ? [
-                                          Marker(
-                                            markerId: const MarkerId(
-                                                "current position"),
-                                            position: _currentP!,
-                                            icon: markerIcon,
-                                            infoWindow: const InfoWindow(
-                                              title: 'Lokasi Anda',
-                                            ),
-                                          ),
-                                          if (_selectedP != null)
+                                  markers: Set<Marker>.of(
+                                    _currentP != null
+                                        ? [
                                             Marker(
                                               markerId: const MarkerId(
-                                                  "selected position"),
-                                              position: _selectedP!,
-                                              icon: markerRideLocationIcon,
-                                              infoWindow: const InfoWindow(
-                                                title: 'Lokasi Pengantaran',
+                                                "current position",
                                               ),
-                                              draggable:
-                                                  true, // Membuat marker dapat dipindah
-                                              onDragEnd: (newPosition) async {
-                                                _controller
-                                                    .clear(); // Clear controller (misalnya untuk peta atau inputan)
-                                                setState(() {
-                                                  _selectedP =
-                                                      newPosition; // Update posisi marker setelah di-drag
-                                                });
-
-                                                // Mengambil nama lokasi berdasarkan latitude dan longitude setelah drag
-                                                List<Placemark> placemarks =
-                                                    await Geocoding().placemarkFromCoordinates(
-                                                  newPosition.latitude,
-                                                  newPosition.longitude,
-                                                );
-                                                if (placemarks.isNotEmpty) {
-                                                  String locationName = "${placemarks[0].name}, ${placemarks[0].street}, ${placemarks[0].subLocality}, ${placemarks[0].locality}, ${placemarks[0].administrativeArea}, ${placemarks[0].postalCode}, ${placemarks[0].country}";
-
-                                                  // Mengupdate _selectedAddress setelah mendapatkan nama lokasi
-                                                  setState(() {
-                                                    _selectedAddress =
-                                                        locationName; // Menyimpan nama lokasi
-                                                  });
-                                                }
-
-                                                // Menyusun dan menggambar polyline berdasarkan posisi lama (_currentP) dan posisi baru (_selectedP)
-                                                getPolylinePoints(
-                                                        _currentP!, _selectedP!)
-                                                    .then((coordinates) {
-                                                  generatePolyLineFromPoints(
-                                                      coordinates); // Fungsi untuk menggambar polyline
-                                                });
-
-                                                // Mendapatkan arah setelah marker di-drag
-                                                _futureDirection =
-                                                    getDirection();
-                                              },
+                                              position: _currentP!,
+                                              icon: markerIcon,
+                                              infoWindow: const InfoWindow(
+                                                title: 'Lokasi Anda',
+                                              ),
                                             ),
-                                        ]
-                                      : []),
+                                            if (_selectedP != null)
+                                              Marker(
+                                                markerId: const MarkerId(
+                                                  "selected position",
+                                                ),
+                                                position: _selectedP!,
+                                                icon: markerRideLocationIcon,
+                                                infoWindow: const InfoWindow(
+                                                  title: 'Lokasi Pengantaran',
+                                                ),
+                                                draggable: true, // Membuat marker dapat dipindah
+                                                onDragEnd: (newPosition) async {
+                                                  _controller.clear(); // Clear controller (misalnya untuk peta atau inputan)
+                                                  setState(() {
+                                                    _selectedP = newPosition; // Update posisi marker setelah di-drag
+                                                  });
+
+                                                  // Mengambil nama lokasi berdasarkan latitude dan longitude setelah drag
+                                                  List<Placemark>
+                                                  placemarks = await Geocoding()
+                                                      .placemarkFromCoordinates(
+                                                        newPosition.latitude,
+                                                        newPosition.longitude,
+                                                      );
+                                                  if (placemarks.isNotEmpty) {
+                                                    String locationName =
+                                                        "${placemarks[0].name}, ${placemarks[0].street}, ${placemarks[0].subLocality}, ${placemarks[0].locality}, ${placemarks[0].administrativeArea}, ${placemarks[0].postalCode}, ${placemarks[0].country}";
+
+                                                    // Mengupdate _selectedAddress setelah mendapatkan nama lokasi
+                                                    setState(() {
+                                                      _selectedAddress =
+                                                          locationName; // Menyimpan nama lokasi
+                                                    });
+                                                  }
+
+                                                  // Menyusun dan menggambar polyline berdasarkan posisi lama (_currentP) dan posisi baru (_selectedP)
+                                                  getPolylinePoints(
+                                                    _currentP!,
+                                                    _selectedP!,
+                                                  ).then((coordinates) {
+                                                    generatePolyLineFromPoints(
+                                                      coordinates,
+                                                    ); // Fungsi untuk menggambar polyline
+                                                  });
+
+                                                  // Mendapatkan arah setelah marker di-drag
+                                                  _futureDirection =
+                                                      getDirection();
+                                                },
+                                              ),
+                                          ]
+                                        : [],
+                                  ),
                                 )
                               else
                                 const Center(
-                                    child: CircularProgressIndicator()),
+                                  child: CircularProgressIndicator(),
+                                ),
                             ],
                           ),
                         ),
@@ -709,17 +727,22 @@ class _AddDestinationState extends State<AddDestination> {
                                             onPressed: _showQRCodeDialog,
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor:
-                                                  const Color.fromARGB(255, 33,
-                                                      156, 144), // Warna tombol
+                                                  const Color.fromARGB(
+                                                    255,
+                                                    33,
+                                                    156,
+                                                    144,
+                                                  ), // Warna tombol
                                               foregroundColor: Colors
                                                   .white, // Warna teks tombol
                                             ),
-                                            child:
-                                                const Text('Generate QR Code'),
+                                            child: const Text(
+                                              'Generate QR Code',
+                                            ),
                                           ),
                                         ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               );
                             }
