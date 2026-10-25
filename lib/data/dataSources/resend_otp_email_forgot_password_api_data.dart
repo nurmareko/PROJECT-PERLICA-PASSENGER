@@ -1,16 +1,21 @@
 import 'dart:convert';
+
 import 'package:airport_taxi_sharing_user_client/data/models/request/resend_otp_email_forgot_password_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/resend_otp_email_forgot_password_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
 import 'package:http/http.dart' as http;
 
 class ResendOTPEmailForgotPasswordAPIData {
-  Future<ResendOTPEmailForgotPasswordResponseModel> resendOTPEmailForgotPassword(
-    ResendOTPEmailForgotPasswordRequestModel resendOTPEmailForgotPasswordRequestModel,
+  Future<ResendOTPEmailForgotPasswordResponseModel>
+  resendOTPEmailForgotPassword(
+    ResendOTPEmailForgotPasswordRequestModel
+    resendOTPEmailForgotPasswordRequestModel,
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('https://airporttaxisharingappserver-production.up.railway.app/api/customers/resendOTPEmailForgotPassword'),
+        Uri.parse(
+          '${ApiConstants.baseUrl}customers/resendOTPEmailForgotPassword',
+        ),
         headers: {'Content-Type': 'application/json'},
         body: resendOTPEmailForgotPasswordRequestModel.toJson(),
       );
@@ -18,9 +23,13 @@ class ResendOTPEmailForgotPasswordAPIData {
       if (response.statusCode == 200) {
         // Parse the JSON response using ResendOTPEmailForgotPasswordResponseModel.fromResponseData
         final ResendOTPEmailForgotPasswordResponseModel result =
-            ResendOTPEmailForgotPasswordResponseModel.fromResponseData(json.decode(response.body));
+            ResendOTPEmailForgotPasswordResponseModel.fromResponseData(
+              json.decode(response.body),
+            );
 
-        print("Successfully resend OTP forgot password, email: ${result.email}");
+        print(
+          "Successfully resend OTP forgot password, email: ${result.email}",
+        );
 
         // Return the result
         return result;

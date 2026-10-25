@@ -1,4 +1,7 @@
 import 'dart:convert';
+
+import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+
 import 'package:airport_taxi_sharing_user_client/data/models/request/forgot_password_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/forgot_password_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -10,7 +13,7 @@ class ForgotPasswordAPIData {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('https://airporttaxisharingappserver-production.up.railway.app/api/customers/forgotPassword'),
+        Uri.parse('${ApiConstants.baseUrl}customers/forgotPassword'),
         headers: {'Content-Type': 'application/json'},
         body: forgotPasswordRequestModel.toJson(),
       );
@@ -18,9 +21,13 @@ class ForgotPasswordAPIData {
       if (response.statusCode == 200) {
         // Parse the JSON response using ForgotPasswordResponseModel.fromResponseData
         final ForgotPasswordResponseModel result =
-            ForgotPasswordResponseModel.fromResponseData(json.decode(response.body));
+            ForgotPasswordResponseModel.fromResponseData(
+              json.decode(response.body),
+            );
 
-        print("Successfully checking email, email: ${result.email}. Redirect to email verification then reset password");
+        print(
+          "Successfully checking email, email: ${result.email}. Redirect to email verification then reset password",
+        );
 
         // Return the result
         return result;

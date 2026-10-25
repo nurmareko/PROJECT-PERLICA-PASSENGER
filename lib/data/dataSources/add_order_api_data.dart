@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/request/add_order_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/add_order_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -6,17 +8,16 @@ import 'package:airport_taxi_sharing_user_client/utils/secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class AddOrderAPIData {
-  
   Future<AddOrderResponseModel> addOrder(
     AddOrderRequestModel addOrderRequestModel,
   ) async {
     try {
       String? token = await SecureStorage().getToken();
       final response = await http.post(
-        Uri.parse('https://airporttaxisharingappserver-production.up.railway.app/api/customers/orders/addOrder'),
+        Uri.parse('${ApiConstants.baseUrl}customers/orders/addOrder'),
         headers: {
           'Authorization': '$token',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: addOrderRequestModel.toJson(),
       );

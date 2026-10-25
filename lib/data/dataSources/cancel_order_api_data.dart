@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/request/cancel_order_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/cancel_order_response_model.dart';
@@ -12,14 +13,15 @@ class CancelOrderAPIData {
   ) async {
     try {
       String? token = await SecureStorage().getToken();
-      final url =
-          Uri.parse('${ApiConstants.baseUrl}customers/orders/cancelOrder');
+      final url = Uri.parse(
+        '${ApiConstants.baseUrl}customers/orders/cancelOrder',
+      );
 
       final response = await http.patch(
         url,
         headers: {
           'Authorization': '$token',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: cancelOrderRequestModel.toJson(),
       );
@@ -28,7 +30,8 @@ class CancelOrderAPIData {
         // Parse the JSON response using CancelOrderResponseModel.fromResponseData
         final CancelOrderResponseModel result =
             CancelOrderResponseModel.fromResponseData(
-                json.decode(response.body));
+              json.decode(response.body),
+            );
 
         print("Successfully cancel order, order id: ${result.id}");
 

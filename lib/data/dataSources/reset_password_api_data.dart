@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+
 import 'package:airport_taxi_sharing_user_client/data/models/request/reset_password_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/reset_password_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -11,7 +13,7 @@ class ResetPasswordAPIData {
   ) async {
     try {
       final response = await http.patch(
-        Uri.parse('https://airporttaxisharingappserver-production.up.railway.app/api/customers/resetPassword'),
+        Uri.parse('${ApiConstants.baseUrl}customers/resetPassword'),
         headers: {'Content-Type': 'application/json'},
         body: resetPasswordRequestModel.toJson(),
       );
@@ -19,7 +21,9 @@ class ResetPasswordAPIData {
       if (response.statusCode == 200) {
         // Parse the JSON response using ResetPasswordResponseModel.fromResponseData
         final ResetPasswordResponseModel result =
-            ResetPasswordResponseModel.fromResponseData(json.decode(response.body));
+            ResetPasswordResponseModel.fromResponseData(
+              json.decode(response.body),
+            );
 
         print("Successfully reset password, email: ${result.email}");
 

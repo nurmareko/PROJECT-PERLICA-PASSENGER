@@ -6,12 +6,16 @@ import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
 import 'package:http/http.dart' as http;
 
 class VerificationEmailForgotPasswordAPIData {
-  Future<VerificationEmailForgotPasswordResponseModel> verificationEmailForgotPassword(
-    VerificationEmailForgotPasswordRequestModel verificationEmailForgotPasswordRequestModel,
+  Future<VerificationEmailForgotPasswordResponseModel>
+  verificationEmailForgotPassword(
+    VerificationEmailForgotPasswordRequestModel
+    verificationEmailForgotPasswordRequestModel,
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('https://airporttaxisharingappserver-production.up.railway.app/api/customers/verificationEmailForgotPassword'),
+        Uri.parse(
+          '${ApiConstants.baseUrl}customers/verificationEmailForgotPassword',
+        ),
         headers: {'Content-Type': 'application/json'},
         body: verificationEmailForgotPasswordRequestModel.toJson(),
       );
@@ -20,7 +24,8 @@ class VerificationEmailForgotPasswordAPIData {
         // Parse the JSON response using VerificationEmailForgotPasswordResponseModel.fromResponseData
         final VerificationEmailForgotPasswordResponseModel result =
             VerificationEmailForgotPasswordResponseModel.fromResponseData(
-                json.decode(response.body));
+              json.decode(response.body),
+            );
 
         print("Successfully email verification, email: ${result.email}");
 
