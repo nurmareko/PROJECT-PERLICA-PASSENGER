@@ -1,3 +1,3 @@
 class ApiConstants {
-  static const String baseUrl = 'https://airporttaxisharingappserver-production.up.railway.app/api/';
+  static const String baseUrl = String.fromEnvironment('API_BASE_URL');
 }
