@@ -89,18 +89,44 @@ class _OrderState extends State<Order> {
     LatLng airportLocation,
   ) async {
     Set<Polyline> polylines = {};
+    const apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+    final response = await http.post(
+      Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
+      },
+      body: json.encode({
+        'origin': {
+          'location': {
+            'latLng': {
+              'latitude': customerOrderLocation.latitude,
+              'longitude': customerOrderLocation.longitude,
+            },
+          },
+        },
+        'destination': {
+          'location': {
+            'latLng': {
+              'latitude': airportLocation.latitude,
+              'longitude': airportLocation.longitude,
+            },
+          },
+        },
+        'travelMode': 'DRIVE',
+        'polylineEncoding': 'ENCODED_POLYLINE',
+      }),
+    );
 
-    String apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
-    String url =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${customerOrderLocation.latitude},${customerOrderLocation.longitude}&destination=${airportLocation.latitude},${airportLocation.longitude}&key=$apiKey";
-
-    // Fetch the directions from current location to the airport
-    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      final routes = data['routes'];
+      final encodedPolyline = routes[0]['polyline']?['encodedPolyline'];
       final List<LatLng> points = _convertToLatLng(
-        _decodePoly(data['routes'][0]['overview_polyline']['points']),
+        _decodePoly(encodedPolyline),
       );
+
       polylines.add(
         Polyline(
           polylineId: const PolylineId('polylineToAirport'),
