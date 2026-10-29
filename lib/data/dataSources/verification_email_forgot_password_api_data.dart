@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/request/verification_email_forgot_password_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/verification_email_forgot_password_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -15,7 +15,7 @@ class VerificationEmailForgotPasswordAPIData {
     try {
       final response = await http.post(
         Uri.parse(
-          '${ApiConstants.baseUrl}customers/verificationEmailForgotPassword',
+          '${dotenv.get('API_BASE_URL')}customers/verificationEmailForgotPassword',
         ),
         headers: {'Content-Type': 'application/json'},
         body: verificationEmailForgotPasswordRequestModel.toJson(),

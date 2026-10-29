@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/request/login_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/login_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -13,7 +13,7 @@ class LoginAPIData {
     LoginRequestModel loginRequestModel,
   ) async {
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}customers/login');
+      final url = Uri.parse('${dotenv.get('API_BASE_URL')}customers/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

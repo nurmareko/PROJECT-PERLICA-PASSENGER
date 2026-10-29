@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 
-import 'package:airport_taxi_sharing_user_client/consts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -164,7 +164,7 @@ class _AddDestinationState extends State<AddDestination> {
         Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes'),
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+          'X-Goog-Api-Key': dotenv.get('GOOGLE_MAPS_API_KEY'),
           'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
         },
         body: json.encode({
@@ -232,7 +232,7 @@ class _AddDestinationState extends State<AddDestination> {
   }
 
   void getSuggestion(String input) async {
-    const String placesApiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+    final String placesApiKey = dotenv.get('GOOGLE_MAPS_API_KEY');
 
     print("hallo ini calling suggestion api");
     try {
@@ -286,7 +286,7 @@ class _AddDestinationState extends State<AddDestination> {
       print("hallo ini calling getPlaceDetail api");
       const String placesDetailsBaseUrl =
           'https://maps.googleapis.com/maps/api/place/details/json';
-      String apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+      String apiKey = dotenv.get('GOOGLE_MAPS_API_KEY');
       String request = '$placesDetailsBaseUrl?place_id=$placeId&key=$apiKey';
       var response = await http.get(Uri.parse(request));
       var data = json.decode(response.body);
@@ -305,7 +305,7 @@ class _AddDestinationState extends State<AddDestination> {
   }
 
   Future<Map<String, dynamic>> getDirection() async {
-    const apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+    final apiKey = dotenv.get('GOOGLE_MAPS_API_KEY');
 
     print("hallo ini calling direction api");
     final response = await http.post(

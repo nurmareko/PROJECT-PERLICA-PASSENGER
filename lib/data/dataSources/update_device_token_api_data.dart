@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/request/update_device_token_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/update_device_token_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -13,7 +13,7 @@ class UpdateDeviceTokenAPIData {
     try {
       String? token = await SecureStorage().getToken();
       final url =
-          Uri.parse('${ApiConstants.baseUrl}customers/updateDeviceToken');
+          Uri.parse('${dotenv.get('API_BASE_URL')}customers/updateDeviceToken');
 
       final response = await http.patch(
         url,

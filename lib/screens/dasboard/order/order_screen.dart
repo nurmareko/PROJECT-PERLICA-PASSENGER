@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:airport_taxi_sharing_user_client/blocs/order/cancelOrder/cancel_order_bloc.dart';
 import 'package:airport_taxi_sharing_user_client/blocs/order/getCurrentOrder/get_current_order_bloc.dart';
 import 'package:airport_taxi_sharing_user_client/blocs/order/sendMessage/send_message_bloc.dart';
@@ -89,7 +91,7 @@ class _OrderState extends State<Order> {
     LatLng airportLocation,
   ) async {
     Set<Polyline> polylines = {};
-    const apiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+    final apiKey = dotenv.get('GOOGLE_MAPS_API_KEY');
     final response = await http.post(
       Uri.parse('https://routes.googleapis.com/directions/v2:computeRoutes'),
       headers: {

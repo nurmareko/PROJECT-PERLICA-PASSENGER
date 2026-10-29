@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/request/cancel_order_request_model.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/cancel_order_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
@@ -14,7 +14,7 @@ class CancelOrderAPIData {
     try {
       String? token = await SecureStorage().getToken();
       final url = Uri.parse(
-        '${ApiConstants.baseUrl}customers/orders/cancelOrder',
+        '${dotenv.get('API_BASE_URL')}customers/orders/cancelOrder',
       );
 
       final response = await http.patch(

@@ -4,11 +4,11 @@ Airport Taxi Sharing passenger application
 
 # run 
 ```
-flutter run --dart-define-from-file=.env
+flutter run
 ```
 
 # build
 ```
-flutter build apk --dart-define-from-file=.env
+flutter build apk
 
 ```

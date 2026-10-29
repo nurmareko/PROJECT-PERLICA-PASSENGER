@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:airport_taxi_sharing_user_client/data/dataSources/api_constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:airport_taxi_sharing_user_client/data/models/response/check_authentication_response_model.dart';
 import 'package:airport_taxi_sharing_user_client/error/new-exception.dart';
 import 'package:airport_taxi_sharing_user_client/utils/secure_storage.dart';
@@ -10,7 +10,7 @@ class CheckAuthenticationAPIData {
     try {
       String? token = await SecureStorage().getToken();
 
-      final url = Uri.parse('${ApiConstants.baseUrl}customers/checkAuthentication');
+      final url = Uri.parse('${dotenv.get('API_BASE_URL')}customers/checkAuthentication');
       final response = await http.get(
         url,
         headers: {'Authorization': '$token'},
